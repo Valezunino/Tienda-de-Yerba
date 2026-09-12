@@ -10,3 +10,7 @@ Tienda online de yerba mate con catálogo, carrito de pedidos por WhatsApp y pan
 4. Ejecutar `npm run dev` para desarrollo o `npm run build` para validar producción.
 
 La contraseña del administrador nunca debe guardarse en el repositorio.
+
+## Producción
+
+El proyecto está preparado para desplegarse en Vercel desde la rama `main`.
