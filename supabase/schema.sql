@@ -21,6 +21,7 @@ create table if not exists public.products (
   updated_at timestamptz not null default now()
 );
 
+grant usage on schema public to anon, authenticated;
 grant select on public.products to anon, authenticated;
 grant insert, update, delete on public.products to authenticated;
 grant select on public.admin_users to authenticated;
@@ -35,7 +36,12 @@ create policy "Administradores pueden modificar productos" on public.products fo
 create policy "Administradores pueden eliminar productos" on public.products for delete to authenticated using (exists (select 1 from public.admin_users a where a.user_id = (select auth.uid())));
 create policy "Administradores pueden validar su acceso" on public.admin_users for select to authenticated using (user_id = (select auth.uid()));
 
-insert into storage.buckets (id, name, public) values ('products', 'products', true) on conflict (id) do update set public = true;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('products', 'products', true, 5242880, array['image/png','image/jpeg','image/webp'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 create policy "Fotos de productos públicas" on storage.objects for select to anon, authenticated using (bucket_id = 'products');
 create policy "Administradores pueden subir fotos" on storage.objects for insert to authenticated with check (bucket_id = 'products' and exists (select 1 from public.admin_users a where a.user_id = (select auth.uid())));
 create policy "Administradores pueden actualizar fotos" on storage.objects for update to authenticated using (bucket_id = 'products' and exists (select 1 from public.admin_users a where a.user_id = (select auth.uid()))) with check (bucket_id = 'products' and exists (select 1 from public.admin_users a where a.user_id = (select auth.uid())));
